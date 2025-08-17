@@ -1,24 +1,24 @@
 "use strict"
 
-function playGame(maxScore = 5) {
-    let computerScore = 0;
-    let humanScore = 0;
-    let roundResult;
+let computerScore;
+let humanScore;
+let maxScore = 5;
 
-    while (computerScore !== maxScore && humanScore !== maxScore) {
-        const computerChoice = getComputerChoice();
-        const humanChoice = getHumanChoice();
+const htmlBeaten = document.querySelector("#beaten");
+const htmlRoundResult = document.querySelector("#round-result")
+const htmlHumanScore = document.querySelector("#human-score");
+const htmlComputerScore = document.querySelector("#computer-score");
+const htmlComputerChoice = document.querySelector("#computer-choice");
+const htmlHumanChoice = document.querySelector("#human-choice");
+const htmlDialog = document.querySelector("dialog");
+const htmlEndGame = document.querySelector("#end-game");
 
-        roundResult = playRound(computerChoice, humanChoice);
-        if (roundResult === "computer") { computerScore++ } else if (roundResult === "human") { humanScore++ }
-        alert(`Score:\nComputer: ${computerScore} | Human: ${humanScore}`);
-    }
+const htmlEndGameBtn = document.querySelector("#end-game-btn");
+htmlEndGameBtn.onclick = playGame;
 
-    if (computerScore === maxScore) {
-        alert("You've lost the game, unfortunately...");
-    } else if (humanScore === maxScore) {
-        alert("Congratulations, you've won the game!");
-    }
+function playGame() {
+    resetGame();
+    startRound();
 }
 
 function getComputerChoice() {
@@ -28,24 +28,35 @@ function getComputerChoice() {
     return items[computerChoice];
 }
 
-function getHumanChoice() {
-    const humanChoice = prompt("Choose an item:", "paper").trim().toLowerCase();
+function startRound() {
+    let items = document.querySelectorAll(".human-choice");
 
-    return humanChoice;
+    items.forEach((item) => {
+        item.addEventListener('click', playRound);
+    })
 }
 
-function playRound(computerChoice, humanChoice) {
+function playRound(event) {
+    const computerChoice = getComputerChoice();
+    const humanChoice = event.currentTarget.id;
     const roundResult = checkRoundResult(computerChoice, humanChoice)
 
+    setItemImage(computerChoice, humanChoice);
+
     if (roundResult === "computer") {
-        alert(`You lose!\nThe computer chose - ${computerChoice} : The human chose - ${humanChoice}`);
+        htmlBeaten.textContent = `${humanChoice} is beaten by ${computerChoice}`;
+        htmlRoundResult.textContent = "You lose!";
+        htmlComputerScore.textContent = ++computerScore;
     } else if (roundResult === "human") {
-        alert(`You won!\nThe computer chose - ${computerChoice} : The human chose - ${humanChoice}`);
+        htmlBeaten.textContent = `${computerChoice} is beaten by ${humanChoice}`;
+        htmlRoundResult.textContent = "You won!";
+        htmlHumanScore.textContent = ++humanScore;
     } else if (roundResult === "draw") {
-        alert(`Draw!\nThe computer chose - ${computerChoice} : The human chose - ${humanChoice}`);
+        htmlBeaten.textContent = "no one is beaten";
+        htmlRoundResult.textContent = "Draw!";
     }
 
-    return roundResult;
+    checkEndGame(maxScore)
 }
 
 function checkRoundResult(computerChoice, humanChoice) {
@@ -57,5 +68,57 @@ function checkRoundResult(computerChoice, humanChoice) {
         return "draw";
     }
 }
+
+function setItemImage(computerChoice, humanChoice) {
+    htmlComputerChoice.classList.remove("rock", "paper", "scissors");
+    htmlHumanChoice.classList.remove("rock", "paper", "scissors");
+
+    const imgComputer = document.createElement("img");
+    imgComputer.setAttribute("src", `./img/${computerChoice}.png`);
+    imgComputer.setAttribute("alt", computerChoice);
+
+    const imgHuman = document.createElement("img");
+    imgHuman.setAttribute("src", `./img/${humanChoice}.png`);
+    imgHuman.setAttribute("alt", humanChoice);
+
+    htmlComputerChoice.replaceChildren(imgComputer);
+    htmlHumanChoice.replaceChildren(imgHuman);
+    htmlComputerChoice.classList.add(computerChoice);
+    htmlComputerChoice.classList.add("computer-image");
+    htmlHumanChoice.classList.add(humanChoice);
+    htmlHumanChoice.classList.add("human-image");
+}
+
+function checkEndGame(maxScore) {
+    if (computerScore === maxScore) {
+        htmlDialog.show();
+        htmlEndGame.classList.add("loose");
+        htmlEndGame.textContent = "You've lost the game, unfortunately... 😢";
+    } else if (humanScore === maxScore) {
+        htmlEndGame.classList.add("win");
+        htmlEndGame.textContent = "Congratulations, you've won the game! 😊";
+        htmlDialog.show();
+    }
+}
+
+function resetGame() {
+    computerScore = 0;
+    humanScore = 0;
+
+    if (htmlComputerChoice.hasChildNodes()) {
+        htmlComputerChoice.removeChild(htmlComputerChoice.lastChild);
+        htmlHumanChoice.removeChild(htmlHumanChoice.lastChild);
+    }
+
+    htmlEndGame.classList.remove("win", "loose");
+
+    htmlComputerScore.textContent = "0";
+    htmlHumanScore.textContent = "0";
+    htmlBeaten.textContent = "";
+    htmlRoundResult.textContent = "";
+
+    htmlDialog.close();
+}
+
 
 playGame();
